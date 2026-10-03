@@ -1,17 +1,14 @@
 # Secure-Programming-BIBIFI
 ## Purpose
 
-A web application for managing an art gallery. It tracks guests and employees
-entering and leaving the gallery and its rooms, with authentication,
-server-side authorization, and audit logging. Built for the Build It, Break It,
-Fix It (BIBIFI) project.
+
 
 ## Team
 
 | Name | Role / Focus |
 |------|--------------|
 | Wil  | Docker, backend, web app |
-| Charlie | TBD |
+| Charlie | Database |
 
 ## Tech Stack
 
