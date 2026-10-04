@@ -14,6 +14,9 @@ CREATE TABLE "users" (
   "username" varchar(255) UNIQUE NOT NULL,
   "password_hash" varchar(255) NOT NULL,
   "role" user_role NOT NULL DEFAULT 'guest',
+  "is_active" boolean NOT NULL DEFAULT true,
+  "failed_attempts" int NOT NULL DEFAULT 0,
+  "locked_until" timestamptz,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
@@ -45,8 +48,20 @@ CREATE TABLE "audit_log" (
   "actor_id" int,
   "action" varchar(100) NOT NULL,
   "target" varchar(255),
-  "success" boolean NOT NULL,
+  "outcome" varchar(64) NOT NULL,
+  "ip_address" varchar(45),
   "created_at" timestamp NOT NULL DEFAULT (now())
+);
+
+-- Server-side sessions so a session can be revoked before it expires.
+-- Only the SHA-256 of the token is stored, so a database leak cannot
+-- be replayed as a live session cookie.
+CREATE TABLE "sessions" (
+  "session_hash" varchar(64) PRIMARY KEY,
+  "user_id" int NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "expires_at" timestamp NOT NULL,
+  "revoked" boolean NOT NULL DEFAULT false
 );
 
 ALTER TABLE "art" ADD FOREIGN KEY ("room_id") REFERENCES "room" ("id") DEFERRABLE INITIALLY IMMEDIATE;
@@ -58,3 +73,9 @@ ALTER TABLE "gallery_event" ADD FOREIGN KEY ("room_id") REFERENCES "room" ("id")
 ALTER TABLE "gallery_event" ADD FOREIGN KEY ("recorded_by") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "audit_log" ADD FOREIGN KEY ("actor_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "sessions" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+CREATE INDEX "sessions_user_id_idx" ON "sessions" ("user_id");
+
+CREATE INDEX "users_username_idx" ON "users" ("username");

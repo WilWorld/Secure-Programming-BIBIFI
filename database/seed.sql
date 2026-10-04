@@ -1,19 +1,24 @@
+-- Dev-only credentials. These passwords are intentionally weak and public so
+-- each teammate can sign in locally. Never reuse them anywhere real.
+--   guest1 / GuestPass1
+--   employee1 / EmployeePass1
+--   administrator1 / AdminPass1
 INSERT INTO
     users (username, password_hash, role)
 VALUES
     (
         'guest1',
-        '$argon2id$v=19$m=65536,t=3,p=4$05FdtU/GHRvpxKN9jsHC2g$rc288NGmP8In4UTpPMIKLXyDcMl7kSfQrEk8pVts9EY',
+        '$argon2id$v=19$m=65536,t=3,p=4$aRPJFjcSWrryzbvhctMlkw$yYxasdwY2YyGsK7X84Ja14E8TKGq5/nHNeaxuoU8mWE',
         'guest'
     ),
     (
         'employee1',
-        '$argon2id$v=19$m=65536,t=3,p=4$HkN/Y9ZcVzODARS3P+tp1g$xihWX/DDSVVsgqKAJl1krlnLk2bBdqnPIKDWI+wV3qQ',
+        '$argon2id$v=19$m=65536,t=3,p=4$dz0/paeIxPWFs/ew5YASNw$V7OegTJr3+1oVg3Gi4BJPKZr9wU/L76juNkCj4fPMEE',
         'employee'
     ),
     (
         'administrator1',
-        '$argon2id$v=19$m=65536,t=3,p=4$/LlBD61uOK9TrRAN59I2ow$9YqlCm0ALdV6zLLBbefICdZi+PKyn2PyHCoqfHDbWj0',
+        '$argon2id$v=19$m=65536,t=3,p=4$n3YxWFRmeElpBULvkzw8jQ$IMsryhbZI8mI0ACGuAIZ8Jzef+kjb01R6wxPTRthtnw',
         'administrator'
     );
 
