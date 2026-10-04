@@ -1,59 +1,99 @@
+"""Flask application factory.  Run with:  gunicorn -b 0.0.0.0:8000 "app:create_app()" """
 import os
 
-from flask import Flask, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, jsonify, render_template, request
+from flask_login import current_user
 from flask_talisman import Talisman
-from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import text
+from werkzeug.exceptions import HTTPException
 
-db = SQLAlchemy()
-csrf = CSRFProtect()
-login_manager = LoginManager()
-limiter = Limiter(key_func=get_remote_address, default_limits=["200/hour"])
+import auth_store
+from auth import init_auth
+from roles import enforce_login_by_default, require_role
+
+PUBLIC_ENDPOINTS = {"home", "health", "auth.login", "static"}
+
+ERROR_TEXT = {
+    400: "The request could not be processed.",
+    401: "Please sign in.",
+    403: "You do not have access to this page.",
+    404: "Page not found.",
+    405: "That action is not allowed here.",
+    413: "That request is too large.",
+    429: "Too many requests. Try again shortly.",
+}
 
 
-def create_app():
-    app = Flask(
-        __name__,
-        template_folder="frontend/templates",
-        static_folder="frontend/static",
-    )
+def _frontend_dir():
+    here = os.path.dirname(os.path.abspath(__file__))
+    for candidate in (os.path.join(here, "frontend"), os.path.join(here, "..", "frontend")):
+        if os.path.isdir(os.path.join(candidate, "templates")):
+            return os.path.abspath(candidate)
+    raise RuntimeError("Could not find frontend/templates next to or above src/backend")
 
-    # Fail loudly if secrets are missing. Never fall back to a default.
-    app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+def create_app(test_config=None):
+    frontend = _frontend_dir()
+    app = Flask(__name__,
+                template_folder=os.path.join(frontend, "templates"),
+                static_folder=os.path.join(frontend, "static"))
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+    if test_config:
+        app.config.update(test_config)
+    if not app.config.get("SECRET_KEY"):
+        app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+    if not app.config["SECRET_KEY"]:
+        raise RuntimeError("SECRET_KEY is not set. Fill it in your .env file.")
 
     force_https = os.environ.get("FORCE_HTTPS", "false").lower() == "true"
-    app.config.update(
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_SECURE=force_https,
-    )
+    Talisman(app, force_https=force_https, session_cookie_secure=force_https,
+             content_security_policy={"default-src": "'self'"}, frame_options="DENY")
+    init_auth(app)
+    enforce_login_by_default(app, PUBLIC_ENDPOINTS)
 
-    # Talisman defaults to Secure cookies + HTTPS redirect, which breaks
-    # plain-http localhost, so both follow FORCE_HTTPS.
-    Talisman(app, force_https=force_https, session_cookie_secure=force_https)
-
-    db.init_app(app)
-    csrf.init_app(app)
-    login_manager.init_app(app)
-    limiter.init_app(app)
     @app.get("/")
-    def index():
-        return "Hello Charlie!"
+    def home():
+        return render_template("home.html")
 
     @app.get("/health")
-    @limiter.exempt
     def health():
         try:
-            db.session.execute(text("SELECT 1"))
-            return jsonify(status="ok"), 200
+            with auth_store.engine().connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return jsonify(status="ok")
         except Exception:
-            app.logger.exception("Health check DB query failed")
-            return jsonify(status="unavailable"), 503
+            app.logger.exception("health check failed")
+            return jsonify(status="error"), 503
+
+    @app.get("/api/whoami")
+    def whoami():
+        return jsonify(username=current_user.username, role=current_user.role)
+
+    @app.get("/admin")
+    @require_role("administrator")
+    def admin_home():
+        return jsonify(area="admin")  # placeholder until the admin pages exist
+
+    def _error(code):
+        message = ERROR_TEXT.get(code, "Something went wrong.")
+        if request.path.startswith("/api/"):
+            return jsonify(error=message), code
+        return render_template("error.html", code=code, message=message), code
+
+    @app.errorhandler(HTTPException)
+    def http_error(e):
+        return _error(e.code)
+
+    @app.errorhandler(Exception)
+    def unhandled_error(e):
+        app.logger.exception("unhandled error")
+        return _error(500)
 
     return app
+
+
+def __getattr__(name):
+    # Lets an existing "gunicorn app:app" command keep working.
+    if name == "app":
+        return create_app()
+    raise AttributeError(name)
