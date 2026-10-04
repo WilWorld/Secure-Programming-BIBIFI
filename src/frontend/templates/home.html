@@ -23,6 +23,7 @@
       {% if current_user.role == 'administrator' %}
       <a class="button" href="{{ url_for('admin_home') }}">Administration</a>
       {% endif %}
+      <a class="button" href="{{ url_for('rooms') }}">Browse the rooms</a>
       <form method="post" action="{{ url_for('auth.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit">Sign out</button>

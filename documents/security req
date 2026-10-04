@@ -1,0 +1,12 @@
+Argon2id password hashing, never plaintext​
+
+Server-side authorization on every route, deny 
+by default​
+
+Parameterized queries only​
+
+Output encoding plus a strict CSP​
+
+CSRF tokens on all state-changing requests​
+
+Audit log of security-relevant actions​

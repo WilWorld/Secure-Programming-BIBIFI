@@ -31,7 +31,8 @@ VALUES
     ('Pygoscelis'),
     ('Aptenodytes'),
     ('Eudyptula'),
-    ('Megadyptes');
+    ('Megadyptes'),
+    ('Palaeeudyptes');
 
 INSERT INTO
     art (title, artist, price_cents, image_path, room_id)
@@ -54,7 +55,7 @@ VALUES
         'Royal',
         'M. Murphy',
         '1000000',
-        '/assets/Royal Penguin.jpg',
+        '/assets/Royal Penguin.jpeg',
         (
             SELECT
                 id

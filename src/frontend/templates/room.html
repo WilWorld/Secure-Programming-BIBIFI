@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ room.name }} | Gallery</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+<body>
+  <main class="page">
+    <p class="crumbs"><a href="{{ url_for('rooms') }}">All rooms</a></p>
+    <h1>{{ room.name }}</h1>
+    <p class="lede">
+      {% if inside %}You are in this room.{% else %}You are not in this room.{% endif %}
+    </p>
+
+    <form method="post" action="{{ url_for('visit', room_id=room.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="{{ 'leave' if inside else 'enter' }}">
+      <button type="submit">{{ 'Leave' if inside else 'Enter' }}</button>
+    </form>
+
+    <section>
+      <h2>Inside now</h2>
+      <ul class="visitors">
+        {% for visitor in visitors %}
+        <li>{{ visitor.username }}</li>
+        {% else %}
+        <li class="none">Nobody is here.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Artworks</h2>
+      <ul class="art">
+        {% for item in art %}
+        <li>
+          {% if item.image_path %}
+          <img class="art-image" src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
+               alt="{{ item.title }}{% if item.artist and item.artist != 'N/A' %}, by {{ item.artist }}{% endif %}"
+               loading="lazy" width="320" height="213">
+          {% endif %}
+          <div>{{ item.title }}</div>
+          {% if item.artist and item.artist != 'N/A' %}
+          <div class="artist">{{ item.artist }}</div>
+          {% endif %}
+          {% if item.price_cents %}
+          <div class="price">{{ '%.2f' | format(item.price_cents / 100) }}</div>
+          {% endif %}
+        </li>
+        {% else %}
+        <li class="none">No artworks in this room yet.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

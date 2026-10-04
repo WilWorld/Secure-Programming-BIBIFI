@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rooms | Gallery</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+<body>
+  <main class="page">
+    <h1>Rooms</h1>
+    <p class="lede">Pick a room to see its artworks and who is inside.</p>
+
+    <ul class="rooms">
+      {% for room in rooms %}
+      <li>
+        <a href="{{ url_for('room_detail', room_id=room.id) }}">
+          <span>{{ room.name }}</span>
+          <span class="meta">{{ room.artwork_count }} artworks &middot; {{ room.visitor_count }} visits</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="none">No rooms yet.</li>
+      {% endfor %}
+    </ul>
+
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Sign out</button>
+    </form>
+  </main>
+</body>
+</html>
