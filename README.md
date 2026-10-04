@@ -168,3 +168,7 @@ _More endpoints will be added as features are built._
 ```bash
 docker compose exec web pytest
 ```
+
+## Database 
+Use this command to see the tables loaded from the schema: 
+"\dt" | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
