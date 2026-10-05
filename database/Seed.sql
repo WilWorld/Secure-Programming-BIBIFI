@@ -3,17 +3,17 @@ INSERT INTO
 VALUES
     (
         'guest1',
-        '$argon2id$v=19$m=65536,t=3,p=4$05FdtU/GHRvpxKN9jsHC2g$rc288NGmP8In4UTpPMIKLXyDcMl7kSfQrEk8pVts9EY',
+        '$argon2id$v=19$m=65536,t=3,p=4$TjFxyN30pNpKzsSjV4Ur+A$/Fw30vD+e0KoMItxe6ad4epkRrFO/WqZzkXvkyF7i3A',
         'guest'
     ),
     (
         'employee1',
-        '$argon2id$v=19$m=65536,t=3,p=4$HkN/Y9ZcVzODARS3P+tp1g$xihWX/DDSVVsgqKAJl1krlnLk2bBdqnPIKDWI+wV3qQ',
+        '$argon2id$v=19$m=65536,t=3,p=4$t5pzj3ztEed3wDODkqF80A$XEU4iarw1Pr2JTWBlEFgzTLyLZuqDQ3GJITzVdALHjw',
         'employee'
     ),
     (
         'administrator1',
-        '$argon2id$v=19$m=65536,t=3,p=4$/LlBD61uOK9TrRAN59I2ow$9YqlCm0ALdV6zLLBbefICdZi+PKyn2PyHCoqfHDbWj0',
+        '$argon2id$v=19$m=65536,t=3,p=4$uciPTQEPMZLm6KejTjLpQA$y9QbRctD0Vl/BjmBTi/WSfv0eQLmebCb6gMXwDWyYyw',
         'administrator'
     );
 
