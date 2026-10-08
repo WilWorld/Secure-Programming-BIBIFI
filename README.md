@@ -99,7 +99,7 @@ project-root/
 6. **Build and start**
    ```bash
    docker compose up --build -d
-   ```
+   ``` 
 
 7. **Verify it works**
    ```powershell
@@ -185,3 +185,9 @@ docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 Use when interacting with database
 ```
 SELECT * FROM users; SELECT * FROM room; SELECT * FROM art;
+
+## Debug Mode
+`this command runs the container in debug mode so it doens't need to be reloaded`
+`for changes to be viewed`
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build -d; docker compose -f docker-compose.yml -f docker-compose.debug.yml logs -f web
+
