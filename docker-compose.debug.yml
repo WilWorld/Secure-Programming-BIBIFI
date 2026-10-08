@@ -1,0 +1,9 @@
+services:
+  web:
+    environment:
+      FLASK_DEBUG: "1"
+      FLASK_APP: "app:create_app"
+    volumes:
+      - ./src/backend:/app
+      - ./src/frontend:/app/frontend
+    command: flask run --host=0.0.0.0 --port=8000
