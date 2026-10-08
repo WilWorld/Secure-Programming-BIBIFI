@@ -173,21 +173,27 @@ docker compose exec web pytest
 Use this command to see the tables loaded from the schema: 
 ```
 "\dt" | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-
+```
 Use the command to see if the database is ready for connections
 ```
 docker compose logs db
-
+```
 Use to interact with database
 ```
 docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-
+```
 Use when interacting with database
 ```
 SELECT * FROM users; SELECT * FROM room; SELECT * FROM art;
-
+```
 ## Debug Mode
-`this command runs the container in debug mode so it doens't need to be reloaded`
-`for changes to be viewed`
+This command runs the container in debug mode so it doens't need to be reloaded for changes to be viewed
+```
 docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build -d; docker compose -f docker-compose.yml -f docker-compose.debug.yml logs -f web
+```
 
+## Styling
+Run this while editing the style
+```
+npx @tailwindcss/cli -i ./src/frontend/static/css/input.css -o ./src/frontend/static/css/tailwind.css --watch
+```
