@@ -3,28 +3,20 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Gallery</h1>
-<p class="lede">Record visits and see who is in each room.</p>
 
-{% if current_user.is_authenticated %}
 <section class="panel">
-  <h2>Signed in</h2>
-  <dl class="facts">
-    <dt>User</dt>
-    <dd>{{ current_user.username }}</dd>
-    <dt>Role</dt>
-    <dd>{{ current_user.role }}</dd>
-  </dl>
-  {% if current_user.role == 'administrator' %}
-  <a class="button" href="{{ url_for('admin_home') }}">Administration</a>
-  {% endif %}
-  <a class="button" href="{{ url_for('rooms') }}">Browse the rooms</a>
-  <form method="post" action="{{ url_for('auth.logout') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit">Sign out</button>
-  </form>
+  <ul class="rooms">
+    {% for room in rooms %}
+    <li>
+      <a href="{{ url_for('room_detail', room_id=room.id) }}">
+        <span>{{ room.name }}</span>
+        <img src="../static/assets/placeholder.png" alt="placeholder">
+      </a>
+    </li>
+    {% else %}
+    <li>No rooms yet.</li>
+    {% endfor %}
+  </ul>
 </section>
-{% else %}
-<a class="button" href="{{ url_for('auth.login') }}">Sign in</a>
-{% endif %}
+
 {% endblock %}

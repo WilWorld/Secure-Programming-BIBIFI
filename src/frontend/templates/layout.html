@@ -1,19 +1,36 @@
 <!doctype html>
 <html lang="en">
 
+{% if current_user.is_authenticated %}
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/tailwind.css') }}">
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 </head>
 
 <body>
-    Does this show anything. STILL?
+    <nav>
+        <h1 class="text-3xl font-bold text-blue-600">Hello Tailwind</h1>
+        <h1>The Emperor's Collection</h1>
+        <p>{{ current_user.username }} | {{ current_user.role }}</p>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Sign out</button>
+        </form>
+        {% if current_user.role == 'administrator' %}
+        <a class="button" href="{{ url_for('admin_home') }}">Administration</a>
+        {% endif %}
+    </nav>
     <main>
         {% block content %}{% endblock %}
     </main>
 </body>
+
+{% else %}
+<a class="button" href="{{ url_for('auth.login') }}">Sign in</a>
+{% endif %}
 
 </html>
