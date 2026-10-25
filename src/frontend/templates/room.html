@@ -52,7 +52,6 @@
         src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
         alt="{{ item.title }}{% if item.artist and item.artist != 'N/A' %}, by {{ item.artist }}{% endif %}"
         loading="lazy" width="320" height="213">
-        {{ item.image_path }}
       {% endif %}
       <div class="text-large font-bold text-white/90">{{ item.title }}</div>
       {% if item.artist and item.artist != 'N/A' %}
