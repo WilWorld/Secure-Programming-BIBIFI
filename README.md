@@ -8,7 +8,7 @@
 | Name | Role / Focus |
 |------|--------------|
 | Wil  | Docker, backend, web app |
-| Charlie | Database |
+| Charlie | Database, Frontend |
 
 ## Tech Stack
 
@@ -189,7 +189,11 @@ SELECT * FROM users; SELECT * FROM room; SELECT * FROM art;
 ## Debug Mode
 This command runs the container in debug mode so it doens't need to be reloaded for changes to be viewed
 ```
-docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build -d; docker compose -f docker-compose.yml -f docker-compose.debug.yml logs -f web
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build -d; 
+```
+Something with debug logs
+```
+docker compose -f docker-compose.yml -f docker-compose.debug.yml logs -f web
 ```
 
 ## Styling

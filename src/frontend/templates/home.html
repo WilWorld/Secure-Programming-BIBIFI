@@ -1,20 +1,26 @@
 {% extends 'layout.html' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}The Emperor's Collection{% endblock %}
+{% block html_class %}snap-y snap-mandatory scroll-smooth{% endblock %}
+{% block nav_class %}bg-gray-800/20 fixed {% endblock %}
 
 {% block content %}
 
 <section class="panel">
-  <ul class="rooms">
-    {% for room in rooms %}
-    <li>
-      <a href="{{ url_for('room_detail', room_id=room.id) }}">
-        <span>{{ room.name }}</span>
-        <img src="../static/assets/placeholder.png" alt="placeholder">
+  <ul class="displays">
+    {% for display in displays %}
+    <li class="snap-start h-dvh overflow-hidden">
+      <a class="relative block h-full w-full" href="{{ url_for('room_detail', room_id=display.id) }}">
+        <span class="z-5 absolute bottom-0 left-0 mx-10 my-10 px-4 py-2 text-white font-bold bg-gray-800/20 shadow-lg rounded-lg">
+          <p class="text-2xl">{{ display.name }}</p>
+          <p class="text-xl">{{ display.title }}</p>
+          <p class="text-l">Artist - {{ display.artist }}</p>
+        </span>
+        <img class="transition-transform duration-1000 hover:scale-110 w-full h-full object-cover object-top" src="{{ url_for('static', filename=display.image_path.lstrip('/')) }}" alt="placeholder">
       </a>
     </li>
     {% else %}
-    <li>No rooms yet.</li>
+    <li>No displays yet.</li>
     {% endfor %}
   </ul>
 </section>

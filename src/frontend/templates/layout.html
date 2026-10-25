@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="{% block html_class %}{% endblock %}">
 
 {% if current_user.is_authenticated %}
 
@@ -11,18 +11,17 @@
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 </head>
 
-<body>
-    <nav>
-        <h1 class="text-3xl font-bold text-blue-600">Hello Tailwind</h1>
-        <h1>The Emperor's Collection</h1>
-        <p>{{ current_user.username }} | {{ current_user.role }}</p>
-        <form method="post" action="{{ url_for('auth.logout') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit">Sign out</button>
-        </form>
+<body  class="bg-slate-200">
+    <nav class="{% block nav_class %}bg-gray-900{% endblock %} border-b border-white/40 shadow-lg z-10 w-full grid grid-cols-[4fr_auto_auto_auto] items-center gap-4 px-4 py-4">
+        <a class="text-3xl font-bold text-white/80" href="{{ url_for('home') }}">The Emperor's Collection</a>
+        <p class="text-white/90">{{ current_user.username }}</p>
         {% if current_user.role == 'administrator' %}
-        <a class="button" href="{{ url_for('admin_home') }}">Administration</a>
+        <a class="cursor-pointer hover:underline underline-offset-4 text-white/90 border-l border-white/40 pl-4 button text-white/90" href="{{ url_for('admin_home') }}">Administration</a>
         {% endif %}
+        <form class="text-white/90 border-l border-white/40 pl-4" method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="cursor-pointer hover:underline underline-offset-4" type="submit">Sign out</button>
+        </form>
     </nav>
     <main>
         {% block content %}{% endblock %}

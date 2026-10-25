@@ -1,47 +1,48 @@
 {% extends 'layout.html' %}
 
 {% block title %}The Emperor's Collection | {{ room.name }}{% endblock %}
+{% block nav_class %}bg-slate-800{% endblock %}
 
 {% block content %}
 
-<h1>{{ room.name }}</h1>
-<p class="lede">
+<!-- <p class="lede">
   {% if inside %}You are in this room.{% else %}You are not in this room.{% endif %}
-</p>
-
-<form method="post" action="{{ url_for('visit', room_id=room.id) }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <input type="hidden" name="action" value="{{ 'leave' if inside else 'enter' }}">
-  <button type="submit">{{ 'Leave' if inside else 'Enter' }}</button>
-</form>
+</p> -->
 
 <section>
-  <h2>Inside now</h2>
-  <ul class="visitors">
+  <div class="visitors flex mt-4">
+    <form class="items-center w-1/20 bg-slate-500 rounded-full py-2 px-4 ml-4 text-white/80" method="post" action="{{ url_for('visit', room_id=room.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="{{ 'leave' if inside else 'enter' }}">
+      <button class="cursor-pointer hover:underline underline-offset-4" type="submit">
+        {{ 'Leave' if inside else 'Enter' }}
+      </button>
+    </form>
     {% for visitor in visitors %}
-    <li>{{ visitor.username }}</li>
+    <p class="items-center w-fit none bg-slate-500 rounded-full py-2 px-4 mx-4 text-white/80">🟢 {{ visitor.username }}</p>
     {% else %}
-    <li class="none">Nobody is here.</li>
+    <p class="items-center w-1/8 none bg-slate-500 rounded-full py-2 px-4 mx-4 text-white/80">🔴 Room is emtpy</p>
     {% endfor %}
-  </ul>
+    </ul>
 </section>
 
 <section>
-  <h2>Artworks</h2>
-  <ul class="art">
+  <ul class="art columns-2 sm:columns-3 lg:columns-5 gap-4 px-4 py-4">
     {% for item in art %}
-    <li>
+    <li
+      class="transition-transform duration-1000 hover:scale-105 break-inside-avoid mb-4 bg-slate-800 rounded-lg p-2 overflow-hidden">
       {% if item.image_path %}
-      <img class="art-image" src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
+      <img class="art-image w-full h-auto rounded-lg mb-1"
+        src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
         alt="{{ item.title }}{% if item.artist and item.artist != 'N/A' %}, by {{ item.artist }}{% endif %}"
         loading="lazy" width="320" height="213">
       {% endif %}
-      <div>{{ item.title }}</div>
+      <div class="text-large font-bold text-white/90">{{ item.title }}</div>
       {% if item.artist and item.artist != 'N/A' %}
-      <div class="artist">{{ item.artist }}</div>
+      <div class="text-sm artist text-white/85">Artist - {{ item.artist }}</div>
       {% endif %}
       {% if item.price_cents %}
-      <div class="price">{{ '%.2f' | format(item.price_cents / 100) }}</div>
+      <div class="text-sm price text-white/85">${{ '%.2f' | format(item.price_cents / 100) }}</div>
       {% endif %}
     </li>
     {% else %}
