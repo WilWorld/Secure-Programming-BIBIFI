@@ -14,21 +14,31 @@
 
 <body class="bg-[url('/../static/assets/sign-in_background.jpg')] bg-cover bg-fixed min-h-scren bg-right">
   <main class="sheet">
+    <!-- Website name -->
+    <!-- <p class="absolute top-4 left-4 font-display text-6xl font-bold text-slate-800/80">The Emperor's Collection</p> -->
     <!-- Sign-in box -->
     <div class="absolute top-1/6 left-1/8 h-2/3 w-1/3 rounded-2xl shadow-lg bg-gray-800/20 p-6 flex flex-col">
-      <p class="text-4xl bold self-center mb-16 uppercase">Sign In</p>
-      {% if error %}
-      <p class="error" role="alert">{{ error }}</p>
-      {% endif %}
-      <form method="post" action="{{ url_for('auth.login') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label class="bg-green-400" for="username">Username</label>
-        <input class="my-4 block bg-red-400" id="username" name="username" type="text" autocomplete="username" maxlength="32" required autofocus>
-        <label class="bg-green-400" for="password">Password</label>
-        <input class="my-4 block bg-red-400" id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
-        <button type="submit">Sign in</button>
-      </form>
+      <div class="bg-white/20 rounded-lg shadow-lg h-auto p-4 flex justify-center items-center mb-6">
+        <p class="text-4xl font-bold text-slate-800/80 uppercase">Sign In</p>
+      </div>
+      <div class="bg-white/20 rounded-lg shadow-lg h-auto p-4 flex h-full">
+        {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
+        <form class="flex flex-col h-full w-full" method="post" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="p-1 text-slate-800/80" for="username">Username</label>
+          <input class="p-1 border-b border-gray-800/20 shadow-lg text-slate-800/80 mb-4" placeholder="Type your username" id="username" name="username" type="text" autocomplete="username"
+            maxlength="32" required autofocus>
+          <label class="p-1 text-slate-800/80" for="password">Password</label>
+          <input class="p-1 border-b border-gray-800/20 shadow-lg text-slate-800/80 mb-8" placeholder="Type your password" id="password" name="password" type="password"
+            autocomplete="current-password" maxlength="128" required>
+          <button class="transition-transform duration-500 hover:scale-105 bg-slate-400/50 uppercase self-center py-1 px-2 rounded-lg w-[20vw]" type="submit">Sign in</button>
+        </form>
+      </div>
     </div>
+    <!-- Credits -->
+    <p class="absolute bottom-2 left-2 text-sm p-1 text-slate-800/80">Artist - Angie McCall</p>
   </main>
 </body>
 
