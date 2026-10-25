@@ -55,7 +55,7 @@ VALUES
         'Royal',
         'M. Murphy',
         '1000000',
-        '/assets/Royal Penguin.jpeg',
+        '/assets/Royal Penguin.jpg',
         (
             SELECT
                 id

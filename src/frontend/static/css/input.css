@@ -1,2 +1,9 @@
 @import "tailwindcss";
 @source "../../templates";
+
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cinzel", serif;
+  --font-body: "Lato", sans-serif;
+}
