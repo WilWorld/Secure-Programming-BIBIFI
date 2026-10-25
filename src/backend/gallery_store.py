@@ -24,6 +24,16 @@ def list_rooms():
         ).mappings().all()
     return [dict(r) for r in rows]
 
+# This is for the room displays on the homepage
+def display_rooms():
+    with _engine().connect() as c:
+        rows = c.execute(
+            text("SELECT DISTINCT ON (r.name) r.id, r.name, "
+                 "       a.title, a.artist, a.image_path "
+                 "FROM art a JOIN room r ON r.id = a.room_id "
+                 "ORDER BY r.name, random()")
+        ).mappings().all()
+    return [dict(r) for r in rows]
 
 def get_room(room_id):
     """Return one room, or None if it does not exist."""
@@ -42,6 +52,7 @@ def list_art(room_id):
             {"i": room_id},
         ).mappings().all()
     return [dict(r) for r in rows]
+
 
 
 def current_visitors(room_id):

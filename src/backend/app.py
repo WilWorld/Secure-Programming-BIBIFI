@@ -55,7 +55,7 @@ def create_app(test_config=None):
 
     @app.get("/")
     def home():
-        return render_template("home.html", rooms=gallery_store.list_rooms())
+        return render_template("home.html", displays=gallery_store.display_rooms())
 
     @app.get("/rooms")
     def rooms():
