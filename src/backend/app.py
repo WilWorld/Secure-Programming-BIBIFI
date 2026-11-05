@@ -13,8 +13,10 @@ from auth import init_auth
 from flask import abort
 from roles import enforce_login_by_default, require_role
 
-PUBLIC_ENDPOINTS = {"home", "health", "auth.login", "static"}
+# These pages can be accessed without logging in
+PUBLIC_ENDPOINTS = {"health", "auth.login", "static"}
 
+# Custom outputs so the error messagess make some sense
 ERROR_TEXT = {
     400: "The request could not be processed.",
     401: "Please sign in.",
@@ -25,7 +27,7 @@ ERROR_TEXT = {
     429: "Too many requests. Try again shortly.",
 }
 
-
+# Locates the templates folder and throws an error if not found
 def _frontend_dir():
     here = os.path.dirname(os.path.abspath(__file__))
     for candidate in (os.path.join(here, "frontend"), os.path.join(here, "..", "frontend")):
@@ -33,35 +35,33 @@ def _frontend_dir():
             return os.path.abspath(candidate)
     raise RuntimeError("Could not find frontend/templates next to or above src/backend")
 
-
+# This is where all of the endpoints and other stuff lives
 def create_app(test_config=None):
-    frontend = _frontend_dir()
-    app = Flask(__name__,
+    frontend = _frontend_dir()                                                              # Creates filepath helper
+    app = Flask(__name__,                                                                   # Finds templates and static folders
                 template_folder=os.path.join(frontend, "templates"),
                 static_folder=os.path.join(frontend, "static"))
-    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024                                            # Form size limit
     if test_config:
-        app.config.update(test_config)
+        app.config.update(test_config)                                                      # ???
     if not app.config.get("SECRET_KEY"):
-        app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+        app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")                             # Checks if key was set and pull .env "SECRET_KEY" if missing
     if not app.config["SECRET_KEY"]:
-        raise RuntimeError("SECRET_KEY is not set. Fill it in your .env file.")
+        raise RuntimeError("SECRET_KEY is not set. Fill it in your .env file.")             # Throw error if .env "SECRET_KEY" is also missing
 
     force_https = os.environ.get("FORCE_HTTPS", "false").lower() == "true"
-    Talisman(app, force_https=force_https, session_cookie_secure=force_https,
+    Talisman(app, force_https=force_https, session_cookie_secure=force_https,               # Adds protective headers
              content_security_policy={"default-src": "'self'"}, frame_options="DENY")
-    init_auth(app)
-    enforce_login_by_default(app, PUBLIC_ENDPOINTS)
+    init_auth(app)                                                                          # ???
+    enforce_login_by_default(app, PUBLIC_ENDPOINTS)                                         # ???
 
+    # Home route
     @app.get("/")
     def home():
         return render_template("home.html", displays=gallery_store.display_rooms())
 
-    @app.get("/rooms")
-    def rooms():
-        return render_template("rooms.html", rooms=gallery_store.list_rooms())
-
-    @app.get("/rooms/<int:room_id>")
+    # Route with all of the gallery pictures
+    @app.get("/room/<int:room_id>")
     def room_detail(room_id):
         room = gallery_store.get_room(room_id)
         if room is None:
@@ -72,6 +72,31 @@ def create_app(test_config=None):
             art=gallery_store.list_art(room_id),
             visitors=gallery_store.current_visitors(room_id),
             inside=gallery_store.is_inside(room_id, current_user.id),
+        )
+
+    # Route with all of the room pictures
+    @app.get("/rooms/<int:room_id>/<int:art_id>")
+    def room_detail_specific(room_id, art_id):
+        room = gallery_store.get_room(room_id)
+        if room is None:
+            abort(404)
+
+        all_art = gallery_store.list_art(room_id)
+        selected = next((a for a in all_art if a["id"] == art_id), None)
+        if selected is None:
+            abort(404)
+
+        # Grabs everything in the current room with the selected title
+        matches = [a for a in all_art if a["title"] == selected["title"]]
+        matches.sort(key=lambda a: a["id"] != art_id)
+
+        return render_template(
+            "rooms.html",
+            room=room,
+            art=matches ,
+            visitors=gallery_store.current_visitors(room_id),
+            inside=gallery_store.is_inside(room_id, current_user.id),
+            selected=selected,
         )
 
     @app.post("/rooms/<int:room_id>/visit")
@@ -93,6 +118,9 @@ def create_app(test_config=None):
             gallery_store.record_event(room_id, subject_id, action, current_user.id)
         except ValueError:
             abort(400)
+        art_id = request.form.get("art_id", type=int)
+        if art_id is not None:
+            return redirect(url_for("room_detail_specific", room_id=room_id, art_id=art_id))
         return redirect(url_for("room_detail", room_id=room_id))
 
     @app.get("/api/rooms")
