@@ -7,12 +7,20 @@ Targets database/schema.sql:
 """
 from sqlalchemy import text
 
+# Notes
+# text("...") wraps the SQL strings
+# :variable is a placeholder
+# .connect() opens database connection for reading and with closes it
+# .begin() opens a connection and transaction for writing
+# .mappings().all() returns rows that can be read by columns dict(r) turns each into a Python dictionary
 
+# Connects to the database
 def _engine():
     import auth_store
     return auth_store.engine()
 
-
+# Returns each room with artwork and enter event counts
+# (SELECT count(*)) is a subquery
 def list_rooms():
     with _engine().connect() as c:
         rows = c.execute(
@@ -35,6 +43,7 @@ def display_rooms():
         ).mappings().all()
     return [dict(r) for r in rows]
 
+# Looks up one room by id
 def get_room(room_id):
     """Return one room, or None if it does not exist."""
     with _engine().connect() as c:
@@ -43,7 +52,7 @@ def get_room(room_id):
         ).mappings().first()
     return dict(row) if row else None
 
-
+# Lists all the artwork in a room by room id
 def list_art(room_id):
     with _engine().connect() as c:
         rows = c.execute(
@@ -53,8 +62,7 @@ def list_art(room_id):
         ).mappings().all()
     return [dict(r) for r in rows]
 
-
-
+# Returns all visitors in current room
 def current_visitors(room_id):
     """People whose most recent event in this room was an entry.
 
@@ -71,7 +79,7 @@ def current_visitors(room_id):
         ).mappings().all()
     return [dict(r) for r in rows if r["action"] == "enter"]
 
-
+# Checks if a person is in the current room
 def is_inside(room_id, user_id):
     """True when this user's most recent event in the room was an entry."""
     with _engine().connect() as c:
@@ -83,7 +91,9 @@ def is_inside(room_id, user_id):
         ).first()
     return row is not None and row[0] == "enter"
 
-
+# Records users entering/leaving rooms
+# To-do: prevent back to back enters, leave with no enter, in two rooms
+# Check which room if any is the user currently in for is_inside
 def record_event(room_id, user_id, action, recorded_by):
     """Append an enter/leave event. The guest records their own movement."""
     if action not in ("enter", "leave"):

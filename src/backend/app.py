@@ -53,14 +53,17 @@ def create_app(test_config=None):
     init_auth(app)
     enforce_login_by_default(app, PUBLIC_ENDPOINTS)
 
+    # Home page
     @app.get("/")
     def home():
         return render_template("home.html", displays=gallery_store.display_rooms())
 
+    # List of rooms. Not sure if this is being used
     @app.get("/rooms")
     def rooms():
         return render_template("rooms.html", rooms=gallery_store.list_rooms())
 
+    # Room page
     @app.get("/rooms/<int:room_id>")
     def room_detail(room_id):
         room = gallery_store.get_room(room_id)
@@ -74,6 +77,7 @@ def create_app(test_config=None):
             inside=gallery_store.is_inside(room_id, current_user.id),
         )
 
+    # Record enter/leave room
     @app.post("/rooms/<int:room_id>/visit")
     def visit(room_id):
         # Guests record their own movement; employees and admins may record
@@ -95,10 +99,12 @@ def create_app(test_config=None):
             abort(400)
         return redirect(url_for("room_detail", room_id=room_id))
 
+    # JSON of rooms
     @app.get("/api/rooms")
     def api_rooms():
         return jsonify(rooms=gallery_store.list_rooms())
 
+    # Is the database working
     @app.get("/health")
     def health():
         try:
@@ -109,10 +115,12 @@ def create_app(test_config=None):
             app.logger.exception("health check failed")
             return jsonify(status="error"), 503
 
+    # JSON of current user
     @app.get("/api/whoami")
     def whoami():
         return jsonify(username=current_user.username, role=current_user.role)
 
+    # Placeholder for admin
     @app.get("/admin")
     @require_role("administrator")
     def admin_home():
