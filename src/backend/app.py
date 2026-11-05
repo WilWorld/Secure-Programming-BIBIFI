@@ -55,13 +55,18 @@ def create_app(test_config=None):
     init_auth(app)                                                                          # ???
     enforce_login_by_default(app, PUBLIC_ENDPOINTS)                                         # ???
 
-    # Home route
+    # Home page
     @app.get("/")
     def home():
         return render_template("home.html", displays=gallery_store.display_rooms())
 
-    # Route with all of the gallery pictures
-    @app.get("/room/<int:room_id>")
+    # List of rooms. Not sure if this is being used
+    @app.get("/rooms")
+    def rooms():
+        return render_template("rooms.html", rooms=gallery_store.list_rooms())
+
+    # Room page
+    @app.get("/rooms/<int:room_id>")
     def room_detail(room_id):
         room = gallery_store.get_room(room_id)
         if room is None:
@@ -74,31 +79,7 @@ def create_app(test_config=None):
             inside=gallery_store.is_inside(room_id, current_user.id),
         )
 
-    # Route with all of the room pictures
-    @app.get("/rooms/<int:room_id>/<int:art_id>")
-    def room_detail_specific(room_id, art_id):
-        room = gallery_store.get_room(room_id)
-        if room is None:
-            abort(404)
-
-        all_art = gallery_store.list_art(room_id)
-        selected = next((a for a in all_art if a["id"] == art_id), None)
-        if selected is None:
-            abort(404)
-
-        # Grabs everything in the current room with the selected title
-        matches = [a for a in all_art if a["title"] == selected["title"]]
-        matches.sort(key=lambda a: a["id"] != art_id)
-
-        return render_template(
-            "rooms.html",
-            room=room,
-            art=matches ,
-            visitors=gallery_store.current_visitors(room_id),
-            inside=gallery_store.is_inside(room_id, current_user.id),
-            selected=selected,
-        )
-
+    # Record enter/leave room
     @app.post("/rooms/<int:room_id>/visit")
     def visit(room_id):
         # Guests record their own movement; employees and admins may record
@@ -123,10 +104,12 @@ def create_app(test_config=None):
             return redirect(url_for("room_detail_specific", room_id=room_id, art_id=art_id))
         return redirect(url_for("room_detail", room_id=room_id))
 
+    # JSON of rooms
     @app.get("/api/rooms")
     def api_rooms():
         return jsonify(rooms=gallery_store.list_rooms())
 
+    # Is the database working
     @app.get("/health")
     def health():
         try:
@@ -137,10 +120,12 @@ def create_app(test_config=None):
             app.logger.exception("health check failed")
             return jsonify(status="error"), 503
 
+    # JSON of current user
     @app.get("/api/whoami")
     def whoami():
         return jsonify(username=current_user.username, role=current_user.role)
 
+    # Placeholder for admin
     @app.get("/admin")
     @require_role("administrator")
     def admin_home():
