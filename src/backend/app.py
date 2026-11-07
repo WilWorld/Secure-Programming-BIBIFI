@@ -110,10 +110,12 @@ def create_app(test_config=None):
         
         return redirect(url_for("room_detail", room_id=room_id))
 
+    # JSON of rooms
     @app.get("/api/rooms")
     def api_rooms():
         return jsonify(rooms=gallery_store.list_rooms())
 
+    # Is the database working
     @app.get("/health")
     def health():
         try:
@@ -124,10 +126,12 @@ def create_app(test_config=None):
             app.logger.exception("health check failed")
             return jsonify(status="error"), 503
 
+    # JSON of current user
     @app.get("/api/whoami")
     def whoami():
         return jsonify(username=current_user.username, role=current_user.role)
 
+    # Placeholder for admin
     @app.get("/admin")
     @require_role("administrator")
     def admin_home():

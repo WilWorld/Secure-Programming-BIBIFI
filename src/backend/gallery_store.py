@@ -17,7 +17,8 @@ def _engine():
     import auth_store
     return auth_store.engine()
 
-
+# Returns each room with artwork and enter event counts
+# (SELECT count(*)) is a subquery
 def list_rooms():
     with _engine().connect() as c:
         rows = c.execute(
@@ -40,6 +41,7 @@ def display_rooms():
         ).mappings().all()
     return [dict(r) for r in rows]
 
+# Looks up one room by id
 def get_room(room_id):
     """Return one room, or None if it does not exist."""
     with _engine().connect() as c:
@@ -48,7 +50,7 @@ def get_room(room_id):
         ).mappings().first()
     return dict(row) if row else None
 
-
+# Lists all the artwork in a room by room id
 def list_art(room_id):
     with _engine().connect() as c:
         rows = c.execute(
@@ -58,8 +60,7 @@ def list_art(room_id):
         ).mappings().all()
     return [dict(r) for r in rows]
 
-
-
+# Returns all visitors in current room
 def current_visitors(room_id):
     """People whose most recent event in this room was an entry.
 
