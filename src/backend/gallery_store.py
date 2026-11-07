@@ -7,6 +7,11 @@ Targets database/schema.sql:
 """
 from sqlalchemy import text
 
+# Custom error type to distinguish invalid requests vs bugs
+class RecordRejected(Exception): pass
+class InRoom(RecordRejected): pass
+class InDifferentRoom(RecordRejected): pass
+class NotInThisRoom(RecordRejected): pass
 
 def _engine():
     import auth_store
@@ -71,26 +76,63 @@ def current_visitors(room_id):
         ).mappings().all()
     return [dict(r) for r in rows if r["action"] == "enter"]
 
+# Keeps functions on same transaction to help prevent race conditions
+def _current_event(c, user_id):
+    return c.execute(
+        text("SELECT action, room_id FROM gallery_event "
+             "WHERE user_id = :u "
+             "ORDER BY occurred_at DESC, id DESC "
+         "LIMIT 1"),
+        {"u": user_id}, 
+    ).first()
 
+# Returns the current room of the selected user
+def current_room(user_id, connection=None):
+    if connection is not None: 
+        row = _current_event(connection, user_id)
+    else:
+        with _engine().connect() as c:
+            row = _current_event(c, user_id)
+    if row is None: return None
+    if row[0] == "enter": return row[1]
+    return None
+
+# Returns true/false if the selected user is in the selected room
 def is_inside(room_id, user_id):
-    """True when this user's most recent event in the room was an entry."""
-    with _engine().connect() as c:
-        row = c.execute(
-            text("SELECT action FROM gallery_event "
-                 "WHERE room_id = :r AND user_id = :u "
-                 "ORDER BY occurred_at DESC, id DESC LIMIT 1"),
-            {"r": room_id, "u": user_id},
-        ).first()
-    return row is not None and row[0] == "enter"
+    return current_room(user_id) == room_id
 
-
+# Runs room checks and records valid events
 def record_event(room_id, user_id, action, recorded_by):
-    """Append an enter/leave event. The guest records their own movement."""
+    # Ensure action is enter/leave
     if action not in ("enter", "leave"):
         raise ValueError("action must be 'enter' or 'leave'")
+
+    # Insert row
     with _engine().begin() as c:
+        # Lock to prevent race condition
+        c.execute(
+            text("SELECT id FROM users WHERE id = :u FOR UPDATE"),
+            {"u": user_id},
+        )
+        
+        # Locate user
+        current = current_room(user_id, c)
+        
+        # Checks
+        if action == "enter":
+            if current == room_id:
+                raise InRoom("user is already in this room")
+            elif current is not None:
+                raise InDifferentRoom("user is in a different room")  
+        elif action == "leave":
+            if current != room_id:
+                raise NotInThisRoom("user is not in this room")
+            
+        # Insertion
         c.execute(
             text("INSERT INTO gallery_event (user_id, room_id, action, recorded_by) "
                  "VALUES (:u, :r, :a, :by)"),
             {"u": user_id, "r": room_id, "a": action, "by": recorded_by},
         )
+
+

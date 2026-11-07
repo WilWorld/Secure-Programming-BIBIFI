@@ -201,3 +201,8 @@ Run this while editing the style
 ```
 npx @tailwindcss/cli -i ./src/frontend/static/css/input.css -o ./src/frontend/static/css/tailwind.css --watch
 ```
+
+## Testing functions
+```
+docker compose exec web python -c "import file_name; print(file_name.function_name())"
+```

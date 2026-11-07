@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}The Emperor's Collection | {{ room.name }}{% endblock %}
+{% block title %}The Emperor's Collection | {{ room.name }} Room {% endblock %}
 {% block nav_class %}bg-gray-800/20 fixed{% endblock %}
 
 {% block content %}
@@ -54,26 +54,19 @@
     {% for item in art %}
     <li
       class="transition-transform duration-1000 hover:scale-105 break-inside-avoid mb-4 bg-slate-800/90 rounded-lg p-2 overflow-hidden shadow-lg">
-      <form hidden id="visit-{{ room.id }}" method="post" action="{{ url_for('visit', room_id=room.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="action" value="enter">
-        <input type="hidden" name="art_id" value="{{ item.id }}">
-      </form>
-      <a href="{{ url_for('room_detail_specific', room_id=room.id, art_id=item.id) }}" data-visit-form="visit-{{ item.id }}">
-        {% if item.image_path %}
-        <img class="art-image w-full h-auto rounded-lg mb-1 shadow-lg"
-          src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
-          alt="{{ item.title }}{% if item.artist and item.artist != 'N/A' %}, by {{ item.artist }}{% endif %}"
-          loading="lazy" width="320" height="213">
-        {% endif %}
-        <div class="text-large font-bold text-white/90">{{ item.title }}</div>
-        {% if item.artist and item.artist != 'N/A' %}
-        <div class="text-sm artist text-white/85">Artist - {{ item.artist }}</div>
-        {% endif %}
-        {% if item.price_cents %}
-        <div class="text-sm price text-white/85">${{ '%.2f' | format(item.price_cents / 100) }}</div>
-        {% endif %}
-      </a>
+      {% if item.image_path %}
+      <img class="art-image w-full h-auto rounded-lg mb-1 shadow-lg"
+        src="{{ url_for('static', filename=item.image_path.lstrip('/')) }}"
+        alt="{{ item.title }}{% if item.artist and item.artist != 'N/A' %}, by {{ item.artist }}{% endif %}"
+        loading="lazy" width="320" height="213">
+      {% endif %}
+      <div class="text-large font-bold text-white/90">{{ item.title }}</div>
+      {% if item.artist and item.artist != 'N/A' %}
+      <div class="text-sm artist text-white/85">Artist - {{ item.artist }}</div>
+      {% endif %}
+      {% if item.price_cents %}
+      <div class="text-sm price text-white/85">${{ '%.2f' | format(item.price_cents / 100) }}</div>
+      {% endif %}
     </li>
     {% else %}
     <li class="none">No artworks in this room yet.</li>
