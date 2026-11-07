@@ -23,6 +23,7 @@ ERROR_TEXT = {
     403: "You do not have access to this page.",
     404: "Page not found.",
     405: "That action is not allowed here.",
+    409: "That movement is not allowed",
     413: "That request is too large.",
     429: "Too many requests. Try again shortly.",
 }
@@ -55,18 +56,13 @@ def create_app(test_config=None):
     init_auth(app)                                                                          # ???
     enforce_login_by_default(app, PUBLIC_ENDPOINTS)                                         # ???
 
-    # Home page
+    # Gallery
     @app.get("/")
     def home():
         return render_template("home.html", displays=gallery_store.display_rooms())
 
-    # List of rooms. Not sure if this is being used
-    @app.get("/rooms")
-    def rooms():
-        return render_template("rooms.html", rooms=gallery_store.list_rooms())
-
-    # Room page
-    @app.get("/rooms/<int:room_id>")
+    # Rooms
+    @app.get("/room/<int:room_id>")
     def room_detail(room_id):
         room = gallery_store.get_room(room_id)
         if room is None:
@@ -79,13 +75,13 @@ def create_app(test_config=None):
             inside=gallery_store.is_inside(room_id, current_user.id),
         )
 
-    # Record enter/leave room
+    # Handles users entering/leaving pages
     @app.post("/rooms/<int:room_id>/visit")
     def visit(room_id):
-        # Guests record their own movement; employees and admins may record
-        # on behalf of another account, which is audited separately.
         action = request.form.get("action")
         subject_id = current_user.id
+        
+        # If recording move on someone else's behalf
         if request.form.get("user_id"):
             if current_user.role not in ("employee", "administrator"):
                 abort(403)
@@ -93,15 +89,25 @@ def create_app(test_config=None):
                 subject_id = int(request.form["user_id"])
             except (TypeError, ValueError):
                 abort(400)
+            if auth_store.get_user_by_id(subject_id) is None:   # Check if user exists
+                abort(404)
+        
+        # Failsafe if room_id doesn't exist
         if gallery_store.get_room(room_id) is None:
             abort(404)
+        
+        # Attempt to record the movement
         try:
             gallery_store.record_event(room_id, subject_id, action, current_user.id)
+            
         except ValueError:
+            auth_store.write_audit(current_user.id, "record_event", f"room={room_id} subject={subject_id} requested={action}", "invalid", request.remote_addr)
             abort(400)
-        art_id = request.form.get("art_id", type=int)
-        if art_id is not None:
-            return redirect(url_for("room_detail_specific", room_id=room_id, art_id=art_id))
+        except gallery_store.RecordRejected:
+            auth_store.write_audit(current_user.id, "record_event", f"room={room_id} subject={subject_id} requested={action}", "denied", request.remote_addr)
+            abort(409)
+        auth_store.write_audit(current_user.id, "record_event", f"room={room_id} subject={subject_id} requested={action}", "success", request.remote_addr)
+        
         return redirect(url_for("room_detail", room_id=room_id))
 
     # JSON of rooms
