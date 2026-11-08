@@ -133,9 +133,27 @@ def create_app(test_config=None):
     def whoami():
         return jsonify(username=current_user.username, role=current_user.role)
 
-    @app.get("/admin")
+    @app.route("/admin", methods=["GET", "POST"])
     @require_role("administrator")
     def admin_home():
+        if request.method == "GET":
+            return render_template("admin.html", users=gallery_store.list_users())
+        
+        # Grab data
+        username = request.form.get("username")
+        role = request.form.get("selected_role")
+
+        # Validate role and username
+        ALLOWED_ROLES = {"guest", "employee", "administrator"}
+        if not username or role not in ALLOWED_ROLES:
+            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+        
+        # Update role
+        gallery_store.update_role(username, role)
+        
+        # Write audit
+        auth_store.write_audit(current_user.id, "UPDATE ROLE", username,  "success", request.remote_addr)
+        
         return render_template("admin.html", users=gallery_store.list_users())
 
     def _error(code):
