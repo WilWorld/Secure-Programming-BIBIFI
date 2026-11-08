@@ -9,18 +9,21 @@
 <!-- Admin stuff -->
 <section>
     <div>
+        <!-- User Management -->
         <table class="border-gray-200 border shadow-sm m-6">
-            <caption class="font-bold"> users n stuff </caption>
+            <caption class="font-bold"> User Management </caption>
             <thead class="bg-slate-600 text-white uppercase text-sm">
                 <tr>
                     <th class="py-1 px-2">username</th>
                     <th class="py-1 px-2">role</th>
+                    <th class="py-1 px-2">room</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                {% for user in users %}
+                {% for user in usersWithLocations %}
                 <tr class="odd:bg-gray-300 even:bg-gray-200">
                     <td class="py-1 px-2">{{ user.username }}</td>
+                    {% if current_user.role == 'administrator' %}
                     <td class="py-1 px-2">
                         <form method="post" action="{{ url_for('admin_home') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -32,10 +35,78 @@
                             </select>
                         </form>
                     </td>
+                    {% else %}
+                    <td class="py-1 px-2">{{ user.role }}</td>
+                    {% endif %}
+                    <td class="py-1 px-2 {% if user.room is none %}text-gray-400{% endif %}">
+                        {{ user.room or "none" }}
+                    </td>
                 </tr>
                 {% else %}
                 <tr>
                     <td>No users yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Room Status -->
+        <table class="border-gray-200 border shadow-sm m-6">
+            <caption class="font-bold"> Room Status </caption>
+            <thead class="bg-slate-600 text-white uppercase text-sm">
+                <tr>
+                    <th class="py-1 px-2">Room</th>
+                    <th class="py-1 px-2">Count</th>
+                    <th class="py-1 px-2">Users</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for room in rooms %}
+                <tr class="odd:bg-gray-300 even:bg-gray-200">
+                    <td class="py-1 px-2">{{room.name}}</td>
+                    <td class="py-1 px-2">{{room.visitor_count}}</td>
+                    <td class="py-1 px-2">
+                        {% if room.visitors %}
+                        {{ room.visitors | join(", ") }}
+                        {% else %}
+                        <span class="text-gray-400">none</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>No users yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Event History -->
+        <table class="border-gray-200 border shadow-sm m-6">
+            <caption class="font-bold"> Event History </caption>
+            <thead class="bg-slate-600 text-white uppercase text-sm">
+                <tr>
+                    <th class="py-1 px-2">User</th>
+                    <th class="py-1 px-2">Room</th>
+                    <th class="py-1 px-2">Action</th>
+                    <th class="py-1 px-2">Occured At</th>
+                    <th class="py-1 px-2">Recorded By</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for event in events %}
+                <tr class="odd:bg-gray-300 even:bg-gray-200">
+                    <td class="py-1 px-2">{{event.user_id}}</td>
+                    <td class="py-1 px-2">{{event.room_id}}</td>
+                    <td class="py-1 px-2">{{event.action}}</td>
+                    <td class="py-1 px-2">{{event.occurred_at}}</td>
+                    <td class="py-1 px-2 {% if event.recorded_by is none %}text-gray-400{% endif %}">
+                        {{ event.recorded_by or "none" }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>No events yet</td>
                 </tr>
                 {% endfor %}
             </tbody>

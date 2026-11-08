@@ -134,10 +134,14 @@ def create_app(test_config=None):
         return jsonify(username=current_user.username, role=current_user.role)
 
     @app.route("/admin", methods=["GET", "POST"])
-    @require_role("administrator")
+    @require_role("administrator", "employee")
     def admin_home():
+        # Add user location to rows
+        users=gallery_store.list_users()
+        usersWithLocations = gallery_store.add_user_rows(users)
+        
         if request.method == "GET":
-            return render_template("admin.html", users=gallery_store.list_users())
+            return render_template("admin.html", usersWithLocations=usersWithLocations, rooms=gallery_store.list_rooms(), events=gallery_store.get_events())
         
         # Grab data
         username = request.form.get("username")
@@ -147,14 +151,23 @@ def create_app(test_config=None):
         ALLOWED_ROLES = {"guest", "employee", "administrator"}
         if not username or role not in ALLOWED_ROLES:
             auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+            abort(400)
+            
+        # Check for valid username
+        check = auth_store.get_user_by_username(username)
+        if check is None:
+            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+            abort(404)
         
         # Update role
-        gallery_store.update_role(username, role)
+        if not gallery_store.update_role(username, role):
+            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+            abort(404)         
         
         # Write audit
         auth_store.write_audit(current_user.id, "UPDATE ROLE", username,  "success", request.remote_addr)
         
-        return render_template("admin.html", users=gallery_store.list_users())
+        return redirect(url_for("admin_home"))
 
     def _error(code):
         message = ERROR_TEXT.get(code, "Something went wrong.")
