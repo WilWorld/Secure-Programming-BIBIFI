@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block title %}The Emperor's Collection - Administration{% endblock %}
+{% block html_class %}snap-y snap-mandatory scroll-smooth{% endblock %}
+{% block nav_class %}bg-gray-800/20{% endblock %}
+
+{% block content %}
+
+<!-- Admin stuff -->
+<section>
+    <h1>Admin stuff</h1>
+    <div>
+        {% for room in rooms %}
+
+        
+        {% else %}
+        <li>No users yet.</li>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

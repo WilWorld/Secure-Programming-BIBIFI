@@ -12,6 +12,7 @@ import os
 import secrets
 
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import IntegrityError
 
 _engine = None
 
@@ -110,3 +111,14 @@ def write_audit(user_id, action, target, outcome, ip):
                  "VALUES (:u, :a, :t, :o, :ip, now())"),
             {"u": user_id, "a": action, "t": (target or "")[:64], "o": outcome, "ip": ip},
         )
+        
+        
+def create_user(username, password_hash):
+    with engine().begin() as c:
+        row = c.execute(
+            text("INSERT INTO users (username, password_hash) "
+                "VALUES (:u, :p) ON CONFLICT (username) DO NOTHING "
+                "RETURNING id"),
+            {"u": username, "p": password_hash},
+        ).first()
+    return row is not None

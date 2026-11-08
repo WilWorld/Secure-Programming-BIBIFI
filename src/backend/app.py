@@ -14,7 +14,7 @@ from flask import abort
 from roles import enforce_login_by_default, require_role
 
 # These pages can be accessed without logging in
-PUBLIC_ENDPOINTS = {"health", "auth.login", "static"}
+PUBLIC_ENDPOINTS = {"health", "auth.login", "auth.signup", "static"}
 
 # Custom outputs so the error messagess make some sense
 ERROR_TEXT = {
@@ -67,11 +67,15 @@ def create_app(test_config=None):
         room = gallery_store.get_room(room_id)
         if room is None:
             abort(404)
+        if current_user.role in ("employee", "administrator"): 
+            visitorsList=gallery_store.current_visitors(room_id)
+        else: 
+            visitorsList = []
         return render_template(
             "room.html",
             room=room,
             art=gallery_store.list_art(room_id),
-            visitors=gallery_store.current_visitors(room_id),
+            visitors=visitorsList,
             inside=gallery_store.is_inside(room_id, current_user.id),
         )
 
@@ -84,6 +88,7 @@ def create_app(test_config=None):
         # If recording move on someone else's behalf
         if request.form.get("user_id"):
             if current_user.role not in ("employee", "administrator"):
+                auth_store.write_audit(current_user.id, "record_event", f"room={room_id} attempted_subject={request.form.get('user_id', '')[:50]}", "denied", request.remote_addr)
                 abort(403)
             try:
                 subject_id = int(request.form["user_id"])
@@ -101,7 +106,7 @@ def create_app(test_config=None):
             gallery_store.record_event(room_id, subject_id, action, current_user.id)
             
         except ValueError:
-            auth_store.write_audit(current_user.id, "record_event", f"room={room_id} subject={subject_id} requested={action}", "invalid", request.remote_addr)
+            auth_store.write_audit(current_user.id, "record_event", f"room={room_id} attempted_subject={request.form.get('user_id', '')[:50]}", "denied", request.remote_addr)
             abort(400)
         except gallery_store.RecordRejected:
             auth_store.write_audit(current_user.id, "record_event", f"room={room_id} subject={subject_id} requested={action}", "denied", request.remote_addr)
@@ -131,7 +136,7 @@ def create_app(test_config=None):
     @app.get("/admin")
     @require_role("administrator")
     def admin_home():
-        return jsonify(area="admin")  # placeholder until the admin pages exist
+        return render_template("admin.html", users=gallery_store.list_users())
 
     def _error(code):
         message = ERROR_TEXT.get(code, "Something went wrong.")

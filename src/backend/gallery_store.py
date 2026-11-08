@@ -17,7 +17,13 @@ def _engine():
     import auth_store
     return auth_store.engine()
 
-
+def list_users():
+    with _engine().connect() as c:
+        rows = c.execute(
+            text("SELECT * FROM users ORDER BY created_at DEC"),
+        ).mappings().all()
+    return [dict(r) for r in rows]
+            
 def list_rooms():
     with _engine().connect() as c:
         rows = c.execute(
