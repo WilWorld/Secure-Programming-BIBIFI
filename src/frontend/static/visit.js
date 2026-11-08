@@ -7,3 +7,7 @@ document.querySelectorAll("a[data-visit-form]").forEach(function (link) {
     form.submit();
   });
 });
+
+document.querySelectorAll('select.auto-submit').forEach(sel => {
+  sel.addEventListener('change', () => sel.form.requestSubmit());
+});

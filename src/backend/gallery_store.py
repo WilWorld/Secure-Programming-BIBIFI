@@ -20,7 +20,7 @@ def _engine():
 def list_users():
     with _engine().connect() as c:
         rows = c.execute(
-            text("SELECT * FROM users ORDER BY created_at DEC"),
+            text("SELECT * FROM users ORDER BY created_at DESC"),
         ).mappings().all()
     return [dict(r) for r in rows]
             
@@ -141,4 +141,10 @@ def record_event(room_id, user_id, action, recorded_by):
             {"u": user_id, "r": room_id, "a": action, "by": recorded_by},
         )
 
+def update_role(username, role):
+    with _engine().begin() as c:
+        c.execute(
+            text("UPDATE users SET role = :r WHERE username = :u"),
+                {"u": username, "r": role},
+            )
 

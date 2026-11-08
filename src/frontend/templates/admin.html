@@ -8,14 +8,38 @@
 
 <!-- Admin stuff -->
 <section>
-    <h1>Admin stuff</h1>
     <div>
-        {% for room in rooms %}
-
-        
-        {% else %}
-        <li>No users yet.</li>
-        {% endfor %}
+        <table class="border-gray-200 border shadow-sm m-6">
+            <caption class="font-bold"> users n stuff </caption>
+            <thead class="bg-slate-600 text-white uppercase text-sm">
+                <tr>
+                    <th class="py-1 px-2">username</th>
+                    <th class="py-1 px-2">role</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for user in users %}
+                <tr class="odd:bg-gray-300 even:bg-gray-200">
+                    <td class="py-1 px-2">{{ user.username }}</td>
+                    <td class="py-1 px-2">
+                        <form method="post" action="{{ url_for('admin_home') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="username" value="{{ user.username }}">
+                            <select name="selected_role" class="auto-submit">
+                                {% for r in ['guest', 'employee', 'administrator'] %}
+                                <option value="{{ r }}" {% if r==user.role %} selected {% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>No users yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </section>
 
