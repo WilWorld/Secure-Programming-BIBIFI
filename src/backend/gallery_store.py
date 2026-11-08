@@ -17,18 +17,39 @@ def _engine():
     import auth_store
     return auth_store.engine()
 
-# Returns each room with artwork and enter event counts
-# (SELECT count(*)) is a subquery
+def list_users():
+    with _engine().connect() as c:
+        rows = c.execute(
+            text("SELECT * FROM users ORDER BY created_at DESC"),
+        ).mappings().all()
+    return [dict(r) for r in rows]
+            
 def list_rooms():
     with _engine().connect() as c:
         rows = c.execute(
-            text("SELECT r.id, r.name, "
-                 "  (SELECT count(*) FROM art a WHERE a.room_id = r.id) AS artwork_count, "
-                 "  (SELECT count(*) FROM gallery_event g "
-                 "     WHERE g.room_id = r.id AND g.action = 'enter') AS visitor_count "
+            text("WITH latest AS ("
+                 "SELECT DISTINCT ON (user_id) user_id, room_id, action "
+                 "FROM gallery_event "
+                 "ORDER BY user_id, occurred_at DESC, id DESC"
+                 ") "
+                 "SELECT r.id, r.name, "
+                 "(SELECT count(*) FROM art a WHERE a.room_id = r.id) AS artwork_count, "
+                 "(SELECT count(*) FROM latest l "
+                 "WHERE l.room_id = r.id AND l.action = 'enter') AS visitor_count, "
+                 "COALESCE((SELECT array_agg(u.username ORDER BY u.username) "
+                 "FROM latest l JOIN users u ON u.id = l.user_id "
+                 "WHERE l.room_id = r.id AND l.action = 'enter'), "
+                 "ARRAY[]::varchar[]) AS visitors "
                  "FROM room r ORDER BY r.name"),
         ).mappings().all()
     return [dict(r) for r in rows]
+
+def get_events():
+    with _engine().connect() as c:
+        rows = c.execute(
+            text("SELECT * FROM gallery_event")
+        ).mappings().all()
+    return [dict(r) for r in rows] if rows else None
 
 # This is for the room displays on the homepage
 def display_rooms():
@@ -98,6 +119,16 @@ def current_room(user_id, connection=None):
     if row[0] == "enter": return row[1]
     return None
 
+# Returns the room name of the selected room
+def room_name(room_id):
+    if room_id is None:
+        return None
+    with _engine().begin() as c:
+        return c.execute(
+                text("SELECT name FROM room WHERE id = :i"),
+                {"i": room_id},
+        ).scalar_one_or_none()
+
 # Returns true/false if the selected user is in the selected room
 def is_inside(room_id, user_id):
     return current_room(user_id) == room_id
@@ -136,4 +167,21 @@ def record_event(room_id, user_id, action, recorded_by):
             {"u": user_id, "r": room_id, "a": action, "by": recorded_by},
         )
 
+def update_role(username, role):
+    with _engine().begin() as c:
+        row = c.execute(
+            text("UPDATE users SET role = :r WHERE username = :u RETURNING id"),
+                {"u": username, "r": role},
+            ).first()
+        return row is not None
 
+def add_user_rows(users):
+    with _engine().connect() as conn:
+        return[
+            {
+                "username": u["username"],
+                "role": u["role"],
+                "room": room_name(current_room(u["id"], connection=conn)),
+            }
+            for u in users
+        ]

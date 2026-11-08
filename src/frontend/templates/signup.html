@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Emperor's Collection | Sign-Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/tailwind.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="bg-[url('/../static/assets/sign-in_background.jpg')] bg-cover bg-fixed min-h-scren bg-right">
+    <main class="sheet">
+        <div class="absolute top-1/6 left-1/8 h-2/3 w-1/3 rounded-2xl shadow-lg bg-gray-800/20 p-6 flex flex-col">
+            <div class="bg-white/20 rounded-lg shadow-lg h-auto p-4 flex justify-center items-center mb-6">
+                <p class="text-4xl font-bold text-slate-800/80 uppercase">Sign Up</p>
+            </div>
+            <!-- Bigger white box -->
+            <div class="bg-white/20 rounded-lg shadow-lg h-auto p-4 flex flex-col h-full w-full">
+                <!-- Login form -->
+                <form class="flex flex-col h-full w-full" method="post" action="{{ url_for('auth.signup') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="relative flex flex-col">
+                        <label class="p-1 text-slate-800/80" for="username">Username</label>
+                        <input class="p-1 border-b border-gray-800/20 shadow-lg text-slate-800/80 mb-4 w-8/10"
+                            placeholder="Type your username" id="username" name="username" type="text"
+                            autocomplete="username" maxlength="32" minlength="3" required autofocus>
+                        <label class="p-1 text-slate-800/80" for="password">Password</label>
+                        <input class="p-1 border-b border-gray-800/20 shadow-lg text-slate-800/80 mb-4 w-8/10"
+                            placeholder="Type your password" id="password" name="password" type="password"
+                            autocomplete="current-password" maxlength="128" minlength="8" required>
+                        <label class="p-1 text-slate-800/80" for="password">Retype Password</label>
+                        <input class="p-1 border-b border-gray-800/20 shadow-lg text-slate-800/80 mb-4 w-8/10"
+                            placeholder="Retype your password" id="passwordMatch" name="passwordMatch" type="password"
+                            autocomplete="current-password" maxlength="128" minlength="8" required>
+
+                        {% if error %}
+                        <p class="error text-red-800 text-sm absolute bottom-0" role="alert">{{ error }}</p>
+                        {% endif %}
+
+                    </div>
+                    <button
+                        class="transition-transform duration-500 hover:scale-105 bg-slate-400/50 uppercase self-center py-1 px-2 rounded-lg w-[20vw]"
+                        type="submit">
+                        Sign Up
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Credits -->
+        <p class="absolute bottom-2 left-2 text-sm p-1 text-slate-800/80">Artist - Angie McCall</p>
+    </main>
+</body>
+
+</html>

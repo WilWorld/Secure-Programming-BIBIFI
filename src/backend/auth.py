@@ -27,7 +27,6 @@ login_manager = LoginManager()
 limiter = Limiter(key_func=get_remote_address)
 csrf = CSRFProtect()
 
-
 class User(UserMixin):
     def __init__(self, row):
         self.id = row["id"]
@@ -85,6 +84,10 @@ def _fail(user_id, username, reason):
     _audit(user_id, "LOGIN", username, reason)
     return render_template("login.html", error=GENERIC_ERROR), 401
 
+def _signup_error(user_id, username, message, reason, status=400):
+    _audit(user_id, "SIGNUP", username, reason)
+    return render_template("signup.html", error=message), status
+
 
 @bp.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
@@ -130,6 +133,31 @@ def login():
     _audit(row["id"], "LOGIN", username, "success")
     return redirect("/")
 
+@bp.route("/signup", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html", error=None)
+    
+    # Grab username and password
+    username = (request.form.get("username") or "").strip()
+    password = request.form.get("password") or ""
+    match    = request.form.get("passwordMatch") or ""
+    
+    # Check for valid username and password
+    if not USERNAME_RE.match(username) or not password or len(password) > 128:
+        return _signup_error(None, username, "invalid input", "invalid input")
+    
+    # Check that passwords match
+    if password != match:
+        return _signup_error(None, username, "passwords don't match", "passwords don't match")
+    
+    # Add to database and check username
+    if not store.create_user(username, ph.hash(password)):
+        return _signup_error(None, username, "username is taken", "username is taken", 409)
+    
+    _audit(None, "SIGNUP", username, "success")
+    return redirect(url_for("auth.login"))
 
 @bp.post("/logout")
 @login_required
