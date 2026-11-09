@@ -82,6 +82,7 @@
             </tbody>
         </table>
 
+        {% if current_user.role == 'administrator' %}
         <!-- Event History -->
         <table class="border-gray-200 border shadow-sm m-6">
             <caption class="font-bold"> Event History </caption>
@@ -141,6 +142,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% endif %}
     </div>
 </section>
 
