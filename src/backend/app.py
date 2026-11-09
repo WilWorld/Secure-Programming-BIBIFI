@@ -140,37 +140,51 @@ def create_app(test_config=None):
     @require_role("administrator", "employee")
     def admin_home():
         # Add user location to rows
-        users=gallery_store.list_users()
+        users = gallery_store.list_users()
         usersWithLocations = gallery_store.add_user_rows(users)
         
         if request.method == "GET":
             return render_template("admin.html", usersWithLocations=usersWithLocations, rooms=gallery_store.list_rooms(), events=gallery_store.get_events())
         
-        # Grab data
-        username = request.form.get("username")
-        role = request.form.get("selected_role")
+        # Decide which part of the function to use
+        choice = request.form.get("action")
+        
+        if choice == "users":
+            # Grab data
+            username = request.form.get("username")
+            role = request.form.get("selected_role")
 
-        # Validate role and username
-        ALLOWED_ROLES = {"guest", "employee", "administrator"}
-        if not username or role not in ALLOWED_ROLES:
-            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
-            abort(400)
+            # Validate role and username
+            ALLOWED_ROLES = {"guest", "employee", "administrator"}
+            if not username or role not in ALLOWED_ROLES:
+                auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+                abort(400)
+                
+            # Check for valid username
+            check = auth_store.get_user_by_username(username)
+            if check is None:
+                auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+                abort(404)
             
-        # Check for valid username
-        check = auth_store.get_user_by_username(username)
-        if check is None:
-            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
-            abort(404)
-        
-        # Update role
-        if not gallery_store.update_role(username, role):
-            auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
-            abort(404)         
-        
-        # Write audit
-        auth_store.write_audit(current_user.id, "UPDATE ROLE", username,  "success", request.remote_addr)
-        
-        return redirect(url_for("admin_home"))
+            # Update role
+            if not gallery_store.update_role(username, role):
+                auth_store.write_audit(current_user.id, "UPDATE ROLE", username, "denied", request.remote_addr)
+                abort(404)         
+            
+            # Write audit
+            auth_store.write_audit(current_user.id, "UPDATE ROLE", username,  "success", request.remote_addr)
+            
+            return redirect(url_for("admin_home"))
+        elif choice == "events":
+            # Grab data
+            filter_for = request.form.get("filter_for")
+            filter_by = request.form.get("filter_by")
+            
+            events = gallery_store.filter_gallery_events(filter_for, filter_by)
+            
+            return render_template("admin.html", usersWithLocations=usersWithLocations, rooms=gallery_store.list_rooms(), events=events, filter_for=filter_for, filter_by=filter_by)
+        else:
+            return redirect(url_for("admin_home"))
 
     def _error(code):
         message = ERROR_TEXT.get(code, "Something went wrong.")

@@ -28,6 +28,7 @@
                         <form method="post" action="{{ url_for('admin_home') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="username" value="{{ user.username }}">
+                            <input type="hidden" name="action" value="users">
                             <select name="selected_role" class="auto-submit">
                                 {% for r in ['guest', 'employee', 'administrator'] %}
                                 <option value="{{ r }}" {% if r==user.role %} selected {% endif %}>{{ r }}</option>
@@ -63,7 +64,7 @@
             <tbody class="divide-y divide-gray-100">
                 {% for room in rooms %}
                 <tr class="odd:bg-gray-300 even:bg-gray-200">
-                    <td class="py-1 px-2">{{room.name}}</td>
+                    <td class="py-1 px-2">{{ room.name }}</td>
                     <td class="py-1 px-2">{{room.visitor_count}}</td>
                     <td class="py-1 px-2">
                         {% if room.visitors %}
@@ -91,6 +92,35 @@
                     <th class="py-1 px-2">Action</th>
                     <th class="py-1 px-2">Occured At</th>
                     <th class="py-1 px-2">Recorded By</th>
+                </tr>
+                <tr class="bg-slate-500 text-xs">
+                    <th class="py-1 px-2">Filter:</th>
+                    <th class="py-1 px-2">
+                        <form id="event_filter" method="post" action="{{ url_for('admin_home') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="events">
+                            <label for="for">For: </label>
+                            <select id="for" name="filter_for" class="auto-submit">
+                                <option class="text-black" value="user_id">User</option>
+                                <option class="text-black" value="room_id">Room</option>
+                                <option class="text-black" value="action">Action</option>
+                                <option class="text-black" value="occurred_at">Occurred At</option>
+                                <option class="text-black" value="recorded_by">Recorded By</option>
+                                <option selected invalid class="text-black" value="occurred_at">{{ filter_for }}</option>
+                            </select>
+                        </form>
+                    </th>
+                    <th class="py-1 px-2">
+                        <label for="by">By: </label>
+                        <select form="event_filter" id="by" name="filter_by" class="auto-submit">
+                            <option class="text-black" value="ASC">Ascending</option>
+                            <option class="text-black" value="DESC">Descending</option>
+                            <option selected invalid class="text-black" value="DESC">{{ filter_by }}</option>
+                        </select>
+
+                    </th>
+                    <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">

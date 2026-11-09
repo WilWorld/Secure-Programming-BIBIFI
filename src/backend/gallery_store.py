@@ -47,7 +47,19 @@ def list_rooms():
 def get_events():
     with _engine().connect() as c:
         rows = c.execute(
-            text("SELECT * FROM gallery_event")
+            text("SELECT * FROM gallery_event ORDER BY occurred_at DESC")
+        ).mappings().all()
+    return [dict(r) for r in rows] if rows else None
+
+def filter_gallery_events(filter_for, filter_by):
+    # Validate inputs
+    SORT_COLUMNS = {"user_id", "room_id", "action", "occurred_at", "recorded_by"}
+    column = filter_for if filter_for in SORT_COLUMNS else "occurred_at"
+    direction = "ASC" if filter_by == "ASC" else "DESC"
+    
+    with _engine().connect() as c:
+        rows = c.execute(
+            text(f"SELECT * FROM gallery_event ORDER BY {column} {direction}, id {direction}"),
         ).mappings().all()
     return [dict(r) for r in rows] if rows else None
 
