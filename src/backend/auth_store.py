@@ -53,14 +53,13 @@ def get_user_by_id(user_id):
         ).mappings().first()
     return dict(row) if row else None
 
-
 def record_failed_login(user_id, max_attempts, lock_minutes):
     with engine().begin() as c:
         c.execute(
             text("UPDATE users SET failed_attempts = failed_attempts + 1, "
                  "locked_until = CASE WHEN failed_attempts + 1 >= :mx "
                  "THEN now() + make_interval(mins => :mins) ELSE locked_until END "
-"WHERE id = :i"),
+                 "WHERE id = :i"),
              {"mx": max_attempts, "mins": lock_minutes, "i": user_id},
         )
 
