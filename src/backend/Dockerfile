@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/backend/ /app/
 COPY src/frontend/ /app/frontend/
+COPY tests/ tests/
+
+ENV PYTEST_ADDOPTS="-p no:cacheprovider"
 
 USER appuser
 EXPOSE 8000
