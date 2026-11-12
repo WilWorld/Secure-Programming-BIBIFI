@@ -117,9 +117,9 @@ def create_app(test_config=None):
 
     @app.post("/leave")
     def leave():
-        room = gallery_store.current_room(current_user.id)
-        gallery_store.record_event(room, current_user.id, "leave", current_user.id)
-        auth_store.write_audit(current_user.id, "record_event", f"leave room:{room}, enter gallery", "success", request.remote_addr)
+        room = gallery_store.leave_current(current_user.id, current_user.id)
+        if room is not None:
+            auth_store.write_audit(current_user.id, "record_event", f"leave room:{room}, enter gallery", "success", request.remote_addr)
         return redirect(url_for("home"))
 
     # JSON of rooms

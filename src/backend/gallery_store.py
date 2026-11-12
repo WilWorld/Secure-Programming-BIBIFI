@@ -197,3 +197,19 @@ def add_user_rows(users):
             }
             for u in users
         ]
+    
+def leave_current(user_id, recorded_by):
+    with _engine().begin() as c:
+        c.execute(
+            text("SELECT id FROM users WHERE id = :u FOR UPDATE"),
+            {"u": user_id},
+        )
+        room = current_room(user_id, c)
+        if room is None:
+            return None
+        c.execute(
+            text("INSERT INTO gallery_event (user_id, room_id, action, recorded_by) "
+                 "VALUES (:u, :r, 'leave', :by)"),
+            {"u": user_id, "r": room, "by": recorded_by},
+        )
+        return room
