@@ -157,6 +157,9 @@ def create_app(test_config=None):
         choice = request.form.get("action")
         
         if choice == "users":
+            if current_user.role != "administrator":
+                auth_store.write_audit(current_user.id, "UPDATE ROLE", request.form.get("username"), "denied", request.remote_addr)
+                abort(403)
             # Grab data
             username = request.form.get("username")
             role = request.form.get("selected_role")
