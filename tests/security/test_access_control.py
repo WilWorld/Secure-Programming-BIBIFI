@@ -53,15 +53,6 @@ def test_guest_cannot_submit_admin_actions(guest_client, fake):
     assert fake.users[1]["role"] == "guest"
 
 
-@pytest.mark.xfail(
-    reason=(
-        "FINDING: POST /admin action=users is protected with "
-        "require_role('administrator', 'employee'), so an employee can change "
-        "roles in the database even though the UI hides the control. Restrict "
-        "role changes to administrators."
-    ),
-    strict=False,
-)
 def test_employee_cannot_change_roles(employee_client, fake):
     response = employee_client.post(
         "/admin",
